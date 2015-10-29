@@ -58,30 +58,43 @@ class RottenApi
         return $jsonContainer;
     }
 
+    /**
+     * @var array
+     */
+    private $movieContainer = [];
+
     private function iterateJsonObject($jsonContainer)
     {
         /**
          * Object notation
          */
         foreach ($jsonContainer->{'movies'} as $vv) {
-            print sprintf('%s %s %s %s %s',
-                    $vv->{'id'},
-                    $vv->{'title'},
-                    $vv->{'year'},
-                    $vv->{'release_dates'}->{'theater'},
-                    $vv->{'synopsis'}) . PHP_EOL;
+            $movieObject = new RottenMovieContainer();
+            $movieObject->setId($vv->{'id'});
+            $movieObject->setTitle($vv->{'title'});
+            $movieObject->setYear($vv->{'year'});
+            $movieObject->setMpaaRating($vv->{'mpaa_rating'});
+            $movieObject->setRuntime($vv->{'runtime'});
+            $movieObject->setReleaseDates($vv->{'release_dates'});
+            $movieObject->setRating($vv->{'ratings'});
+            $movieObject->setSynopsis($vv->{'synopsis'});
+            $movieObject->setPoster($vv->{'posters'});
+            $movieObject->setAbridgedCast($vv->{'abridged_cast'});
+            $movieObject->setLinks($vv->{'links'});
+            $this->movieContainer[] = $movieObject;
         }
     }
 
     /**
      * @var string
      */
-    private static $openingUrl = 'http://api.rottentomatoes.com/api/public/v1.0/lists/movies/openig.json?apikey=';
+    private static $openingUrl = 'http://api.rottentomatoes.com/api/public/v1.0/lists/movies/opening.json?apikey=';
 
     public function getOpeningMovies()
     {
         $this->jsonObject = $this->getJsonData(self::$openingUrl);
         $this->iterateJsonObject($this->jsonObject);
+        return $this->movieContainer;
     }
 
     /**
@@ -177,6 +190,14 @@ class RottenApi
     public static function setInTheaterUrl($inTheaterUrl)
     {
         self::$inTheaterUrl = $inTheaterUrl;
+    }
+
+    /**
+     * @return array
+     */
+    public function getMovieContainer()
+    {
+        return $this->movieContainer;
     }
 }
 

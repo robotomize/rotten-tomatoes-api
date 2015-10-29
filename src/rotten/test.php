@@ -3,8 +3,9 @@
 require 'autoload.php';
 
 include 'RottenApi.php';
+include 'RottenMovieContainer.php';
 
 use \rotten\RottenApi;
 
 $tt = new RottenApi();
-print $tt->getOpeningMovies();
+print_r($tt->getOpeningMovies());
