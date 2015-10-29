@@ -54,14 +54,46 @@ class RottenApi
     private $jsonObject;
 
     /**
+     * @param string $additionalOptions
+     * @return string
+     */
+    private function splitParams($additionalOptions)
+    {
+        $query = '';
+        $options = explode('&', $additionalOptions);
+        if ($additionalOptions !== '') {
+            foreach ($options as $value) {
+                $query .= $value . ' ';
+            }
+        }
+        return $query;
+    }
+
+    /**
+     * @param array $additionalOptions
+     * @return string
+     */
+    private function buildSearchQuery($additionalOptions = [])
+    {
+        return sprintf('&q=%s&page=%s',
+            empty($additionalOptions['p']) ? '' : $additionalOptions['q'],
+            empty($additionalOptions['p']) ? 1 : $additionalOptions['p']);
+    }
+
+    /**
      * @param string $sourceUrl
      * @return mixed
      * @throws JsonValidate
      * @throws TomatoesApiProblem
      */
-    private function getJsonData($sourceUrl)
+    private function getJsonData($sourceUrl, $additionalOptions = [])
     {
-        $this->jsonVar = sprintf('%s%s', $sourceUrl, $this->apiKey);
+        if (0 !== count($additionalOptions)) {
+            $this->jsonVar = sprintf('%s%s%s', $sourceUrl, $this->apiKey, $this->buildSearchQuery($additionalOptions));
+        } else {
+            $this->jsonVar = sprintf('%s%s', $sourceUrl, $this->apiKey);
+        }
+
         $this->jsonVar = file_get_contents($this->jsonVar);
 
         if ($this->jsonVar == '') {
@@ -82,34 +114,67 @@ class RottenApi
     private $movieContainer = [];
 
     /**
+     * @param \Exception $exception
+     */
+    private function getException(\Exception $exception)
+    {
+        if ($this->debug) {
+            print sprintf('Exception in %s file, %s line, with message %s',
+                $exception->getFile(), $exception->getLine(), $exception->getMessage());
+        }
+    }
+
+    /**
+     * @param $jsonContainer
+     * @return RottenMovieContainer
+     */
+    private function pullDataToMovieContainer($jsonContainer)
+    {
+        $movieObject = new RottenMovieContainer();
+        $movieObject->setId($jsonContainer->{'id'});
+        $movieObject->setTitle($jsonContainer->{'title'});
+        $movieObject->setYear($jsonContainer->{'year'});
+        $movieObject->setMpaaRating($jsonContainer->{'mpaa_rating'});
+        $movieObject->setRuntime($jsonContainer->{'runtime'});
+        $movieObject->setReleaseDates($jsonContainer->{'release_dates'});
+        $movieObject->setRating($jsonContainer->{'ratings'});
+        $movieObject->setSynopsis($jsonContainer->{'synopsis'});
+        $movieObject->setPoster($jsonContainer->{'posters'});
+        $movieObject->setAbridgedCast($jsonContainer->{'abridged_cast'});
+        $movieObject->setLinks($jsonContainer->{'links'});
+
+        return $movieObject;
+    }
+
+    /**
      * @param $jsonContainer
      */
-    private function iterateJsonObject($jsonContainer)
+    private function fetchFew($jsonContainer)
     {
         /**
          * Object notation
          */
         try {
             foreach ($jsonContainer->{'movies'} as $vv) {
-                $movieObject = new RottenMovieContainer();
-                $movieObject->setId($vv->{'id'});
-                $movieObject->setTitle($vv->{'title'});
-                $movieObject->setYear($vv->{'year'});
-                $movieObject->setMpaaRating($vv->{'mpaa_rating'});
-                $movieObject->setRuntime($vv->{'runtime'});
-                $movieObject->setReleaseDates($vv->{'release_dates'});
-                $movieObject->setRating($vv->{'ratings'});
-                $movieObject->setSynopsis($vv->{'synopsis'});
-                $movieObject->setPoster($vv->{'posters'});
-                $movieObject->setAbridgedCast($vv->{'abridged_cast'});
-                $movieObject->setLinks($vv->{'links'});
-                $this->movieContainer[] = $movieObject;
+                $this->movieContainer[] = $this->pullDataToMovieContainer($vv);
             }
         } catch (\Exception $exception) {
-            if ($this->debug) {
-                print sprintf('Exception in %s file, %s line, with message %s',
-                    $exception->getFile(), $exception->getLine(), $exception->getMessage());
-            }
+            $this->getException($exception);
+        }
+        return $this->movieContainer;
+    }
+
+    /**
+     * @param $jsonContainer
+     * @return array
+     */
+    private function fetchOne($jsonContainer)
+    {
+        try {
+            $this->movieContainer[] = $this->pullDataToMovieContainer($jsonContainer);
+
+        } catch (\Exception $exception) {
+            $this->getException($exception);
         }
         return $this->movieContainer;
     }
@@ -127,7 +192,7 @@ class RottenApi
     public function getOpeningMovies()
     {
         $this->jsonObject = $this->getJsonData(self::$openingUrl);
-        return $this->iterateJsonObject($this->jsonObject);
+        return $this->fetchFew($this->jsonObject);
     }
 
     /**
@@ -143,7 +208,7 @@ class RottenApi
     public function getUpcomingMovies()
     {
         $this->jsonObject = $this->getJsonData(self::$upcomingUrl);
-        return $this->iterateJsonObject($this->jsonObject);
+        return $this->fetchFew($this->jsonObject);
     }
 
     /**
@@ -160,7 +225,36 @@ class RottenApi
     public function getInTheatreMovies()
     {
         $this->jsonObject = $this->getJsonData(self::$inTheaterUrl);
-        return $this->iterateJsonObject($this->jsonObject);
+        return $this->fetchFew($this->jsonObject);
+    }
+
+    /**
+     * @var string
+     */
+    private static $movieInfo = 'http://api.rottentomatoes.com/api/public/v1.0/movies/';
+
+    /**
+     * @param $movieId
+     * @return array
+     * @throws JsonValidate
+     * @throws TomatoesApiProblem
+     */
+    public function getMovieInfo($movieId)
+    {
+        $movieLink = sprintf('%s%s.json?apikey=', self::$movieInfo, $movieId);
+        $this->jsonObject = $this->getJsonData($movieLink);
+        return $this->fetchOne($this->jsonObject);
+    }
+
+    /**
+     * @var string
+     */
+    private static $searchQuery = 'http://api.rottentomatoes.com/api/public/v1.0/movies.json?apikey=';
+
+    public function search($searchQuery, $page)
+    {
+        $this->jsonObject = $this->getJsonData(self::$inTheaterUrl, ['q' => $searchQuery, 'p' => $page]);
+        return $this->fetchFew($this->jsonObject);
     }
 
     /**
