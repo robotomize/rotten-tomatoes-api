@@ -7,6 +7,6 @@ include 'RottenMovieContainer.php';
 
 use \rotten\RottenApi;
 
-//$tt = new RottenApi();
-//print_r($tt->getMovieInfo(770672122));
+$tt = new RottenApi();
+print_r($tt->search('Iron Man', '1'));
 

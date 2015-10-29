@@ -253,7 +253,7 @@ class RottenApi
 
     public function search($searchQuery, $page)
     {
-        $this->jsonObject = $this->getJsonData(self::$inTheaterUrl, ['q' => $searchQuery, 'p' => $page]);
+        $this->jsonObject = $this->getJsonData(self::$searchQuery, ['q' => $searchQuery, 'p' => $page]);
         return $this->fetchFew($this->jsonObject);
     }
 
