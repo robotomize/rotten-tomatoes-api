@@ -54,22 +54,6 @@ class RottenApi
     private $jsonObject;
 
     /**
-     * @param string $additionalOptions
-     * @return string
-     */
-    private function splitParams($additionalOptions)
-    {
-        $query = '';
-        $options = explode('&', $additionalOptions);
-        if ($additionalOptions !== '') {
-            foreach ($options as $value) {
-                $query .= $value . ' ';
-            }
-        }
-        return $query;
-    }
-
-    /**
      * @param array $additionalOptions
      * @return string
      */
