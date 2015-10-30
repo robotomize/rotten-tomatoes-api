@@ -1,6 +1,6 @@
 <?php
 
-namespace rotten;
+namespace rotten\RottenApi;
 
 use rotten\Exceptions\ApiKeyNotFound;
 use rotten\Exceptions\JsonValidate;
@@ -26,16 +26,26 @@ class RottenApi
      */
     private $apiKey;
 
-    public function __construct($apiKey = '')
+    /**
+     * @var bool
+     */
+    private $rawOption = false;
+
+    /**
+     * @param array $params
+     * @throws ApiKeyNotFound
+     */
+    public function __construct($params = [])
     {
-        if ($apiKey == '') {
-            $this->apiKey = file_get_contents(__DIR__ . '/data/credentials');
+        if ($params['apiKey'] == '') {
+            $this->apiKey = file_get_contents(__DIR__ . '/../data/credentials');
         } else {
-            $this->apiKey = $apiKey;
+            $this->apiKey = $params['apiKey'];
         }
         if ($this->apiKey == '') {
             throw new ApiKeyNotFound('Put api key to constructor');
         }
+        $this->rawOption = $params['raw'];
     }
 
     /**
@@ -65,6 +75,21 @@ class RottenApi
     }
 
     /**
+     * @param $sourceUrl
+     * @param array $additionalOptions
+     * @return string
+     */
+    private function getJson($sourceUrl, $additionalOptions = [])
+    {
+        if (0 !== count($additionalOptions)) {
+            $this->jsonVar = sprintf('%s%s%s', $sourceUrl, $this->apiKey, $this->buildSearchQuery($additionalOptions));
+        } else {
+            $this->jsonVar = sprintf('%s%s', $sourceUrl, $this->apiKey);
+        }
+        return file_get_contents($this->jsonVar);
+    }
+
+    /**
      * @param string $sourceUrl
      * @return mixed
      * @throws JsonValidate
@@ -72,13 +97,8 @@ class RottenApi
      */
     private function getJsonData($sourceUrl, $additionalOptions = [])
     {
-        if (0 !== count($additionalOptions)) {
-            $this->jsonVar = sprintf('%s%s%s', $sourceUrl, $this->apiKey, $this->buildSearchQuery($additionalOptions));
-        } else {
-            $this->jsonVar = sprintf('%s%s', $sourceUrl, $this->apiKey);
-        }
 
-        $this->jsonVar = file_get_contents($this->jsonVar);
+        $this->jsonVar = $this->getJson($sourceUrl, $additionalOptions);
 
         if ($this->jsonVar == '') {
             throw new TomatoesApiProblem($this->jsonVar);
@@ -175,8 +195,12 @@ class RottenApi
      */
     public function getOpeningMovies()
     {
-        $this->jsonObject = $this->getJsonData(self::$openingUrl);
-        return $this->fetchFew($this->jsonObject);
+        if ($this->rawOption) {
+            return $this->getJson(self::$openingUrl);
+        } else {
+            $this->jsonObject = $this->getJsonData(self::$openingUrl);
+            return $this->fetchFew($this->jsonObject);
+        }
     }
 
     /**
@@ -191,8 +215,12 @@ class RottenApi
      */
     public function getUpcomingMovies()
     {
-        $this->jsonObject = $this->getJsonData(self::$upcomingUrl);
-        return $this->fetchFew($this->jsonObject);
+        if ($this->rawOption) {
+            return $this->getJson(self::$upcomingUrl);
+        } else {
+            $this->jsonObject = $this->getJsonData(self::$upcomingUrl);
+            return $this->fetchFew($this->jsonObject);
+        }
     }
 
     /**
@@ -208,7 +236,11 @@ class RottenApi
      */
     public function getInTheatreMovies()
     {
-        $this->jsonObject = $this->getJsonData(self::$inTheaterUrl);
+        if ($this->rawOption) {
+            return $this->getJson(self::$inTheaterUrl);
+        } else {
+            $this->jsonObject = $this->getJsonData(self::$inTheaterUrl);
+        }
         return $this->fetchFew($this->jsonObject);
     }
 
@@ -226,8 +258,12 @@ class RottenApi
     public function getMovieInfo($movieId)
     {
         $movieLink = sprintf('%s%s.json?apikey=', self::$movieInfo, $movieId);
-        $this->jsonObject = $this->getJsonData($movieLink);
-        return $this->fetchOne($this->jsonObject);
+        if ($this->rawOption) {
+            return $this->getJson($movieLink);
+        } else {
+            $this->jsonObject = $this->getJsonData($movieLink);
+            return $this->fetchOne($this->jsonObject);
+        }
     }
 
     /**
@@ -235,10 +271,21 @@ class RottenApi
      */
     private static $searchQuery = 'http://api.rottentomatoes.com/api/public/v1.0/movies.json?apikey=';
 
+    /**
+     * @param $searchQuery
+     * @param $page
+     * @return array|string
+     * @throws JsonValidate
+     * @throws TomatoesApiProblem
+     */
     public function search($searchQuery, $page)
     {
-        $this->jsonObject = $this->getJsonData(self::$searchQuery, ['q' => $searchQuery, 'p' => $page]);
-        return $this->fetchFew($this->jsonObject);
+        if ($this->rawOption) {
+            return $this->getJson(self::$searchQuery, ['q' => $searchQuery, 'p' => $page]);
+        } else {
+            $this->jsonObject = $this->getJsonData(self::$searchQuery, ['q' => $searchQuery, 'p' => $page]);
+            return $this->fetchFew($this->jsonObject);
+        }
     }
 
     /**
