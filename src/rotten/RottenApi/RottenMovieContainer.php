@@ -1,6 +1,6 @@
 <?php
 
-namespace rotten;
+namespace rotten\RottenApi;
 
 /**
  * Class RottenMovieContainer for generate movie container
