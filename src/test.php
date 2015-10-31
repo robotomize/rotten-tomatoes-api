@@ -7,6 +7,9 @@ use \rotten\RottenApi\RottenApi;
 $tt = new RottenApi(['apiKey' => '', 'raw' => true]);
 print $tt->search('Iron Man', '1');
 
-//$t2 = new RottenApi();
-//print_r($tt->getUpcomingMovies());
+$t2 = new RottenApi();
+print_r($tt->getUpcomingMovies());
+
+$t3 = new RottenApi();
+print $t3->getInTheatreMovies()
 
