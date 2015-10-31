@@ -12,6 +12,13 @@ use rotten\Exceptions\TomatoesApiProblem;
  * @package rotten
  * @author robotomize@gmail.com
  * @version 0.0.1.0
+ *
+ * @usage
+ * example
+ * $tt = new RottenApi(['apiKey' => 'your api key', 'raw' => false]);
+ * print_r($tt->getInTheatreMovies());
+ *
+ * 'raw' => true return raw json data
  */
 class RottenApi
 {
@@ -32,6 +39,7 @@ class RottenApi
     private $rawOption = false;
 
     /**
+     * $params['apiKey', 'raw']
      * @param array $params
      * @throws ApiKeyNotFound
      */
