@@ -1,9 +1,10 @@
 # RottenTomatoesAPI
+
 Rotten tomatoes API PHP wrapper
 
 ## Install
 
-`git clone https://github.com/robotomize/fujes.git`
+`git clone https://github.com/robotomize/RottenTomatoesAPI.git`
 
 ## RottenAPI methods instructions
 
