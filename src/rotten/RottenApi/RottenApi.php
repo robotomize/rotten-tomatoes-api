@@ -45,15 +45,20 @@ class RottenApi
      */
     public function __construct($params = [])
     {
-        if ($params['apiKey'] == '') {
+        if (0 === count($params)) {
             $this->apiKey = file_get_contents(__DIR__ . '/../data/credentials');
         } else {
-            $this->apiKey = $params['apiKey'];
+            if (isset($params['apiKey'])) {
+                $this->apiKey = $params['apiKey'];
+            }
+
+            if (isset($params['raw'])) {
+                $this->rawOption = $params['raw'];
+            }
         }
         if ($this->apiKey == '') {
             throw new ApiKeyNotFound('Put api key to constructor');
         }
-        $this->rawOption = $params['raw'];
     }
 
     /**
@@ -94,7 +99,11 @@ class RottenApi
         } else {
             $this->jsonVar = sprintf('%s%s', $sourceUrl, $this->apiKey);
         }
-        return file_get_contents($this->jsonVar);
+        try {
+            return file_get_contents($this->jsonVar);
+        } catch (\Exception $except) {
+            throw new TomatoesApiProblem('Problem with Tomatoes API or APIkey not valid');
+        }
     }
 
     /**
