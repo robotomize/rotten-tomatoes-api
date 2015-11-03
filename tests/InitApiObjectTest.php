@@ -10,6 +10,7 @@ use \rotten\Exceptions\TomatoesApiProblem;
 /**
  * Class InitApiObjectTest
  * @package test
+ * @author robotomize@gmail.com
  */
 class InitApiObjectTest extends \PHPUnit_Framework_TestCase
 {
