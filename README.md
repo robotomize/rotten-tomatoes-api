@@ -77,6 +77,8 @@ print_r($t3->getMovieInfo((int)$id));
 ```php
 <?php
 print_r(RottenFactory::makeRotten()->getInTheatreMovies());
-print RottenFactory::makeRotten(['raw' => true])->getInTheatreMovies();
+print_r(RottenFactory::makeRotten(['raw' => true])->getInTheatreMovies());
+print RottenFactory::makeRotten()->getMovieInfo(771416235)[0]->getTitle();
+print RottenFactory::makeRotten()->getMovieInfo(771416235)[0]->getSynopsis();
  ?>
 ```
