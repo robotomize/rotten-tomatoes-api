@@ -4,6 +4,11 @@ namespace test;
 
 use \rotten\RottenApi\RottenFactory;
 
+/**
+ * Class RottenFactoryTest
+ * @package test
+ * @author robotomize@gmail.com
+ */
 class RottenFactoryTest extends \PHPUnit_Framework_TestCase
 {
     public function testMovieInfoFactory()
