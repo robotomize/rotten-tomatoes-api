@@ -9,7 +9,7 @@ use rotten\Exceptions\TomatoesApiProblem;
 
 /**
  * Class RottenApi Wrapper for RottenTomatoes API
- * @package rotten
+ * @package rotten\RottenAPI
  * @author robotomize@gmail.com
  * @version 0.0.1.0
  *
